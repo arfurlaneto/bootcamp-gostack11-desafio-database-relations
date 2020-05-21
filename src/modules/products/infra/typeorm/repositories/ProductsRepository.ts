@@ -21,21 +21,40 @@ class ProductsRepository implements IProductsRepository {
     price,
     quantity,
   }: ICreateProductDTO): Promise<Product> {
-    // TODO
+    const product = this.ormRepository.create({ name, price, quantity });
+
+    await this.ormRepository.save(product);
+
+    return product;
   }
 
   public async findByName(name: string): Promise<Product | undefined> {
-    // TODO
+    return this.ormRepository.findOne({
+      where: {
+        name,
+      },
+    });
   }
 
   public async findAllById(products: IFindProducts[]): Promise<Product[]> {
-    // TODO
+    return this.ormRepository.findByIds(products);
   }
 
   public async updateQuantity(
     products: IUpdateProductsQuantityDTO[],
   ): Promise<Product[]> {
-    // TODO
+    const stockProducts = await this.findAllById(products);
+
+    products.forEach(product => {
+      const stockProduct = stockProducts.find(p => p.id === product.id);
+      if (stockProduct) {
+        stockProduct.quantity = product.quantity;
+      }
+    });
+
+    await this.ormRepository.save(stockProducts);
+
+    return stockProducts;
   }
 }
 
